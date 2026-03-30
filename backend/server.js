@@ -19,14 +19,17 @@ const localYtDlp = path.join(__dirname, 'yt-dlp');
 let YT_DLP_BIN;
 if (isWindows && fs.existsSync(localYtDlpExe)) {
   YT_DLP_BIN = localYtDlpExe;
+  console.log('✓ Found yt-dlp.exe (Windows)');
 } else if (fs.existsSync(localYtDlp)) {
   YT_DLP_BIN = localYtDlp;
+  console.log('✓ Found yt-dlp (Linux/Mac)');
 } else {
   YT_DLP_BIN = 'yt-dlp';
+  console.log('⚠ Using system yt-dlp (not found locally)');
 }
 
-const YT_DLP = isWindows && fs.existsSync(localYtDlpExe) ? `"${localYtDlpExe}"` : 'yt-dlp';
-console.log('yt-dlp binary:', YT_DLP_BIN);
+const YT_DLP = isWindows && fs.existsSync(localYtDlpExe) ? `"${localYtDlpExe}"` : YT_DLP_BIN;
+console.log('yt-dlp binary path:', YT_DLP_BIN);
 
 // Resolve ffmpeg — check common Windows locations, otherwise use system binary
 function findFfmpeg() {
@@ -123,9 +126,11 @@ function detectPlatform(url) {
 // Check if yt-dlp is available
 async function checkYtDlp() {
   try {
-    await execAsync(`${YT_DLP} --version`);
+    const result = await execAsync(`${YT_DLP_BIN} --version`);
+    console.log('✓ yt-dlp version:', result.stdout.trim());
     return true;
-  } catch {
+  } catch (err) {
+    console.error('✗ yt-dlp check failed:', err.message);
     return false;
   }
 }
@@ -402,7 +407,17 @@ app.use((err, req, res, _next) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Backend running on http://localhost:${PORT}`));
+app.listen(PORT, async () => {
+  console.log(`🚀 Backend running on http://localhost:${PORT}`);
+  console.log('Checking yt-dlp availability...');
+  const available = await checkYtDlp();
+  if (available) {
+    console.log('✓ yt-dlp is ready for downloads');
+  } else {
+    console.log('⚠ WARNING: yt-dlp not found - running in demo mode');
+    console.log('  To fix: Run "npm run build" or install yt-dlp manually');
+  }
+});
 
 // Prevent uncaught rejections from killing the process silently
 process.on('unhandledRejection', (reason) => {
