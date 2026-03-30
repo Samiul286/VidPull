@@ -4,6 +4,8 @@ import QualitySelector from './QualitySelector';
 import DownloadProgress from './DownloadProgress';
 import { saveToHistory } from '../utils';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 export default function SingleDownloader() {
   const [url, setUrl] = useState('');
   const [info, setInfo] = useState(null);
@@ -17,7 +19,7 @@ export default function SingleDownloader() {
     if (!url.trim()) return;
     setLoading(true); setError(''); setInfo(null); setJob(null);
     try {
-      const res = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
+      const res = await fetch(`${API_URL}/info?url=${encodeURIComponent(url)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       setInfo(data);
@@ -34,7 +36,7 @@ export default function SingleDownloader() {
     if (!info || !selectedQuality) return;
     setJob({ status: 'processing', progress: 0 });
     try {
-      const res = await fetch('/api/download', {
+      const res = await fetch(`${API_URL}/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, quality: selectedQuality.quality, ext: selectedQuality.ext }),
@@ -51,7 +53,7 @@ export default function SingleDownloader() {
     clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/job/${jobId}`);
+        const res = await fetch(`${API_URL}/job/${jobId}`);
         const data = await res.json();
         setJob({ ...data, jobId });
         if (data.status === 'done' || data.status === 'error') {
@@ -65,7 +67,7 @@ export default function SingleDownloader() {
   }
 
   function handleSave() {
-    if (job?.downloadUrl) window.open(job.downloadUrl, '_blank');
+    if (job?.downloadUrl) window.open(`${API_URL.replace('/api', '')}${job.downloadUrl}`, '_blank');
   }
 
   function handleReset() {

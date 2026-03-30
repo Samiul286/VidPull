@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 const DEFAULT_QUALITY = { quality: '720p', ext: 'mp4' };
 
 export default function BatchDownloader() {
@@ -36,7 +37,7 @@ export default function BatchDownloader() {
         quality: it.quality.quality,
         ext: it.quality.ext,
       }));
-      const res = await fetch('/api/batch', {
+      const res = await fetch(`${API_URL}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: payload }),
@@ -54,7 +55,7 @@ export default function BatchDownloader() {
 
   function pollAll(jobIds) {
     const interval = setInterval(async () => {
-      const results = await Promise.all(jobIds.map(id => fetch(`/api/job/${id}`).then(r => r.json())));
+      const results = await Promise.all(jobIds.map(id => fetch(`${API_URL}/job/${id}`).then(r => r.json())));
       const map = {};
       jobIds.forEach((id, i) => { map[id] = results[i]; });
       setJobMap(map);
@@ -178,7 +179,7 @@ export default function BatchDownloader() {
                 </span>
                 {st?.status === 'done' && st.downloadUrl && (
                   <button className="btn-save" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
-                    onClick={() => window.open(st.downloadUrl, '_blank')}>
+                    onClick={() => window.open(`${API_URL.replace('/api', '')}${st.downloadUrl}`, '_blank')}>
                     ⬇
                   </button>
                 )}
