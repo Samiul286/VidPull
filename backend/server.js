@@ -399,6 +399,34 @@ app.post('/api/batch', downloadLimiter, async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+// Update yt-dlp endpoint (for free tier without shell access)
+app.post('/api/update-ytdlp', async (req, res) => {
+  try {
+    console.log('Updating yt-dlp...');
+    const ytdlpPath = path.join(__dirname, 'yt-dlp');
+    
+    // Remove old binary
+    if (fs.existsSync(ytdlpPath)) {
+      fs.unlinkSync(ytdlpPath);
+    }
+    
+    // Download latest
+    await execAsync('curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp && chmod +x yt-dlp', {
+      cwd: __dirname
+    });
+    
+    // Verify it works
+    const result = await execAsync(`${ytdlpPath} --version`);
+    const version = result.stdout.trim();
+    
+    console.log(`✓ yt-dlp updated to version: ${version}`);
+    res.json({ success: true, version, message: 'yt-dlp updated successfully' });
+  } catch (err) {
+    console.error('Failed to update yt-dlp:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Global error handler — ensures JSON is always returned
 app.use((err, req, res, _next) => {
   console.error('[global error]', err.message);

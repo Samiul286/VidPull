@@ -120,10 +120,11 @@ VITE_API_URL=https://your-backend.onrender.com/api
 
 Instagram frequently changes their API to block scrapers. If you see warnings about metadata extraction:
 
-1. **Update yt-dlp** (on Render):
-   - Go to Render Dashboard → Your Service → Shell
-   - Run: `npm run update-ytdlp`
-   - Restart the service
+1. **Update yt-dlp** (without shell access):
+   ```bash
+   curl -X POST https://vidpull-q657.onrender.com/api/update-ytdlp
+   ```
+   Or visit in browser: `https://vidpull-q657.onrender.com/api/update-ytdlp`
 
 2. **Known limitations**:
    - Private accounts require authentication
