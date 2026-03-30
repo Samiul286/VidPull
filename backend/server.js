@@ -11,23 +11,36 @@ import { v4 as uuidv4 } from 'uuid';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const execAsync = promisify(exec);
 
-// Resolve yt-dlp binary — use local .exe if present, otherwise fall back to PATH
-const localYtDlp = path.join(__dirname, 'yt-dlp.exe');
-const YT_DLP = fs.existsSync(localYtDlp) ? `"${localYtDlp}"` : 'yt-dlp';
-const YT_DLP_BIN = fs.existsSync(localYtDlp) ? localYtDlp : 'yt-dlp';
+// Resolve yt-dlp binary — use local .exe on Windows, otherwise use downloaded/system binary
+const isWindows = process.platform === 'win32';
+const localYtDlpExe = path.join(__dirname, 'yt-dlp.exe');
+const localYtDlp = path.join(__dirname, 'yt-dlp');
+
+let YT_DLP_BIN;
+if (isWindows && fs.existsSync(localYtDlpExe)) {
+  YT_DLP_BIN = localYtDlpExe;
+} else if (fs.existsSync(localYtDlp)) {
+  YT_DLP_BIN = localYtDlp;
+} else {
+  YT_DLP_BIN = 'yt-dlp';
+}
+
+const YT_DLP = isWindows && fs.existsSync(localYtDlpExe) ? `"${localYtDlpExe}"` : 'yt-dlp';
 console.log('yt-dlp binary:', YT_DLP_BIN);
 
-// Resolve ffmpeg — check common winget/system locations
+// Resolve ffmpeg — check common Windows locations, otherwise use system binary
 function findFfmpeg() {
-  const candidates = [
-    path.join(__dirname, 'ffmpeg.exe'),
-    'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
-    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Links', 'ffmpeg.exe'),
-  ];
-  for (const p of candidates) {
-    try { if (fs.existsSync(p)) return path.dirname(p); } catch {}
+  if (isWindows) {
+    const candidates = [
+      path.join(__dirname, 'ffmpeg.exe'),
+      'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
+      path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Links', 'ffmpeg.exe'),
+    ];
+    for (const p of candidates) {
+      try { if (fs.existsSync(p)) return path.dirname(p); } catch {}
+    }
   }
-  // Try PATH
+  // Try PATH (works on Linux/Mac and Windows if in PATH)
   try { execAsync('ffmpeg -version'); return null; } catch { return undefined; }
 }
 const FFMPEG_LOCATION = findFfmpeg();
