@@ -53,6 +53,8 @@ console.log('ffmpeg location:', FFMPEG_LOCATION ?? 'using PATH / not found');
 function baseArgs(extra = []) {
   const args = ['--no-playlist'];
   if (FFMPEG_LOCATION) args.push('--ffmpeg-location', FFMPEG_LOCATION);
+  // Add Node.js as JavaScript runtime for YouTube extraction
+  args.push('--extractor-args', 'youtube:player_client=android');
   return [...args, ...extra];
 }
 
