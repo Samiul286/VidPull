@@ -114,6 +114,32 @@ VITE_API_URL=https://your-backend.onrender.com/api
 - `GET /api/job/:id` - Check download status
 - `GET /api/file/:id` - Download file
 
+## Troubleshooting
+
+### Instagram Downloads Not Working
+
+Instagram frequently changes their API to block scrapers. If you see warnings about metadata extraction:
+
+1. **Update yt-dlp** (on Render):
+   - Go to Render Dashboard → Your Service → Shell
+   - Run: `npm run update-ytdlp`
+   - Restart the service
+
+2. **Known limitations**:
+   - Private accounts require authentication
+   - Stories may not be downloadable
+   - Some content may be geo-restricted
+
+3. **Alternative**: Try using the direct video URL instead of the post URL
+
+### Other Platform Issues
+
+If downloads fail for other platforms:
+- Check if the content is public
+- Verify the URL is correct
+- Try updating yt-dlp (see above)
+- Check [yt-dlp supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
